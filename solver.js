@@ -69,10 +69,10 @@ class Node {
   getNeighbors() {}
 }
 
-class Block {
+class Block extends Node {
   constructor(position, map) {
-    this.position = position;
-    this.blockVector = [1, 1, 2];
+    const blockVector = [1, 1, 2];
+    super(position, blockVector);
     this.map = map;
   }
 
