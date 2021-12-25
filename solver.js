@@ -184,11 +184,9 @@ describe('Tests', () => {
   });
   it('checks possibility of moving block to the right', () => {
     const block = new Block([1, 1], fixedTests[0]);
+    const nextNode = calculateMove([1, 0], block);
 
-    Test.assertEquals(
-      block.isMovementPossible(block.calculateMove([1, 0])),
-      true
-    );
+    Test.assertEquals(isMovementPossible(fixedTests[0], nextNode), true);
   });
   it('moves vertically lying block to the right', () => {
     const block = new Block([1, 1], fixedTests[0]);
