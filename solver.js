@@ -11,11 +11,17 @@
  */
 function calculateMove(direction, previousNode) {
   const { position, blockVector } = previousNode;
-  const newPosition = [
-    blockVector[0] * direction[0] + position[0],
-    blockVector[1] * direction[1] + position[1],
-    0,
-  ];
+  let newPosition = [];
+
+  if (position[0] >= 0 && position[1] >= 0) {
+    newPosition = [direction[0] + position[0], direction[1] + position[1]];
+  } else {
+    newPosition = [
+      position[2] * direction[0] + position[0],
+      position[2] * direction[2] + position[1],
+    ];
+  }
+
   let newVector = [];
   if (direction[0] !== 0)
     newVector = [blockVector[2], blockVector[1], blockVector[0]];
@@ -57,6 +63,8 @@ class Node {
   constructor(position, blockVector) {
     this.position = position;
     this.blockVector = blockVector;
+    this.isSameAs.bind(this);
+    this.neighbors.bind(this);
   }
 
   isSameAs(otherNode) {
@@ -66,7 +74,28 @@ class Node {
     );
   }
 
-  getNeighbors() {}
+  neighbors(map) {
+    const directions = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ];
+
+    const res = directions.map((dir) => {
+      const nextNode = calculateMove(dir, this);
+      const available = isMovementPossible(map, nextNode);
+      console.log(nextNode);
+      console.log(available);
+      if (available) {
+        return nextNode;
+      } else {
+        return false;
+      }
+    });
+
+    return res.filter((dir) => dir);
+  }
 }
 
 class Block extends Node {
@@ -74,6 +103,7 @@ class Block extends Node {
     const blockVector = [1, 1, 2];
     super(position, blockVector);
     this.map = map;
+    this.move.bind(this);
   }
 
   move(direction) {
@@ -194,7 +224,7 @@ describe('Tests', () => {
 
     block.blockVector = [1, 2, 1];
     const { position, blockVector } = calculateMove([1, 0], block);
-    Test.assertDeepEquals(position, [2, 1, 0]);
+    Test.assertDeepEquals(position, [2, 1]);
     Test.assertDeepEquals(blockVector, [1, 2, 1]);
   });
   it('checks movement possible for vertical block', () => {
@@ -222,5 +252,13 @@ describe('Tests', () => {
     const map = fixedTests[0];
     Test.assertEquals(getField(map, [1, 1]), 'B');
     Test.assertEquals(getField(map, [1, 2]), 1);
+  });
+  it('gets neighbors for node', () => {
+    const block = new Block([1, 1], fixedTests[0]);
+
+    Test.assertDeepEquals(block.neighbors(fixedTests[0]), [
+      new Node([2, 1], [2, 1, 1]),
+      new Node([1, 2], [1, 2, 1]),
+    ]);
   });
 });
