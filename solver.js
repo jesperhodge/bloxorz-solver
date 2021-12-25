@@ -34,22 +34,23 @@ function getField(map, [x, y]) {
  * given map fields)
  */
 function isMovementPossible(map, newNode) {
-  const { newPosition, newVector } = newNode;
-  const newFieldFree = getField(map, newPosition) === 1;
+  const { position, blockVector } = newNode;
+  const newFieldFree = getField(map, position) === 1;
+
   if (!newFieldFree) return false;
 
-  if (newVector[0] === 2) return true;
+  if (blockVector[0] === 2) return true;
 
   let nextBlockField;
 
-  if (newVector[2] === 2) {
-    nextBlockField = [newPosition[0] + 1, newPosition[1]];
+  if (blockVector[2] === 2) {
+    nextBlockField = [position[0] + 1, position[1]];
   }
-  if (newVector[1] === 2) {
-    nextBlockField = [newPosition[0] + 1, newPosition[1] + 1];
+  if (blockVector[1] === 2) {
+    nextBlockField = [position[0], position[1] + 1];
   }
 
-  return getField(nextBlockField) === 1;
+  return getField(map, nextBlockField) === 1;
 }
 
 class Node {
@@ -111,8 +112,6 @@ function bloxSolver(arr) {
   const block = new Block(blockPosition, arr);
   block.position = blockPosition;
 }
-
-/***************** Tests for Codewars Test Framework ************/
 
 describe('Tests', () => {
   const fixedTests = [
@@ -192,21 +191,23 @@ describe('Tests', () => {
     const block = new Block([1, 1], fixedTests[0]);
 
     block.blockVector = [1, 2, 1];
-    const { newPosition, newVector } = block.calculateMove([1, 0]);
-    Test.assertDeepEquals(newPosition, [2, 1, 0]);
-    Test.assertDeepEquals(newVector, [1, 2, 1]);
+    const { position, blockVector } = calculateMove([1, 0], block);
+    Test.assertDeepEquals(position, [2, 1, 0]);
+    Test.assertDeepEquals(blockVector, [1, 2, 1]);
   });
   it('checks movement possible for vertical block', () => {
     const block = new Block([1, 1], fixedTests[0]);
     block.blockVector = [1, 2, 1];
 
-    let movement = block.calculateMove([1, 0]);
-    Test.assertEquals(block.isMovementPossible(movement), true);
+    const secondNode = calculateMove([1, 0], block);
+    Test.assertEquals(isMovementPossible(fixedTests[0], secondNode), true);
+    console.log('ok');
 
     block.position = [2, 0, 0];
-    movement = block.calculateMove([1, 0]);
+    const thirdNode = calculateMove([1, 0], block);
 
-    Test.assertEquals(block.isMovementPossible(movement), false);
+    console.log('ok 2');
+    Test.assertEquals(isMovementPossible(fixedTests[0], thirdNode), false);
   });
   it('checks whether two nodes match', () => {
     const node1 = new Node([1, 0, 0], [1, 2, 1]);
