@@ -113,6 +113,8 @@ function bloxSolver(arr) {
   block.position = blockPosition;
 }
 
+/* -------------- Tests -------------- */
+
 describe('Tests', () => {
   const fixedTests = [
     [
@@ -217,8 +219,8 @@ describe('Tests', () => {
     Test.assertEquals(node1.isSameAs(node2), true);
   });
   it('gets field', () => {
-    const block = new Block([1, 1], fixedTests[0]);
-    Test.assertEquals(block.getField([1, 1]), 'B');
-    Test.assertEquals(block.getField([1, 2]), 1);
+    const map = fixedTests[0];
+    Test.assertEquals(getField(map, [1, 1]), 'B');
+    Test.assertEquals(getField(map, [1, 2]), 1);
   });
 });
