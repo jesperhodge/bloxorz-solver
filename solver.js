@@ -7,6 +7,51 @@
 // We can calculate the four corners of the square that is in the path by adding (0,0), (0,1), (1,0), and (1,1)
 // respectively as vectors.
 
+/** direction is [x, y]
+ */
+function calculateMove(direction, previousNode) {
+  const { position, blockVector } = previousNode;
+  const newPosition = [
+    blockVector[0] * direction[0] + position[0],
+    blockVector[1] * direction[1] + position[1],
+    0,
+  ];
+  let newVector = [];
+  if (direction[0] !== 0)
+    newVector = [blockVector[2], blockVector[1], blockVector[0]];
+  if (direction[1] !== 0)
+    newVector = [blockVector[0], blockVector[2], blockVector[1]];
+
+  return new Node(newPosition, newVector);
+}
+
+function getField(map, [x, y]) {
+  return parseInt(map[y][x]) || map[y][x];
+}
+
+/** to check whether a movement is possible, for the relevant axis check block vector length (1 or 2 fields)
+ * on that axis, and then check the next 1 or 2 fields in the given direction (whether there is a path - a 1 in
+ * given map fields)
+ */
+function isMovementPossible(map, newNode) {
+  const { newPosition, newVector } = newNode;
+  const newFieldFree = getField(map, newPosition) === 1;
+  if (!newFieldFree) return false;
+
+  if (newVector[0] === 2) return true;
+
+  let nextBlockField;
+
+  if (newVector[2] === 2) {
+    nextBlockField = [newPosition[0] + 1, newPosition[1]];
+  }
+  if (newVector[1] === 2) {
+    nextBlockField = [newPosition[0] + 1, newPosition[1] + 1];
+  }
+
+  return getField(nextBlockField) === 1;
+}
+
 class Node {
   constructor(position, blockVector) {
     this.position = position;
@@ -19,6 +64,8 @@ class Node {
       JSON.stringify(this.blockVector) === JSON.stringify(otherNode.blockVector)
     );
   }
+
+  getNeighbors() {}
 }
 
 class Block {
@@ -28,62 +75,10 @@ class Block {
     this.map = map;
   }
 
-  /** direction is [x, y]
-   */
-  calculateMove(direction) {
-    const newPosition = [
-      this.blockVector[0] * direction[0] + this.position[0],
-      this.blockVector[1] * direction[1] + this.position[1],
-      0,
-    ];
-    let newVector = [];
-    if (direction[0] !== 0)
-      newVector = [
-        this.blockVector[2],
-        this.blockVector[1],
-        this.blockVector[0],
-      ];
-    if (direction[1] !== 0)
-      newVector = [
-        this.blockVector[0],
-        this.blockVector[2],
-        this.blockVector[1],
-      ];
-
-    return { newPosition, newVector };
-  }
-
-  getField([x, y]) {
-    return parseInt(this.map[y][x]) || this.map[y][x];
-  }
-
-  /** to check whether a movement is possible, for the relevant axis check block vector length (1 or 2 fields)
-   * on that axis, and then check the next 1 or 2 fields in the given direction (whether there is a path - a 1 in
-   * given map fields)
-   */
-  isMovementPossible(movement) {
-    const { newPosition, newVector } = movement;
-    const newFieldFree = this.getField(newPosition) === 1;
-    if (!newFieldFree) return false;
-
-    if (newVector[0] === 2) return true;
-
-    let nextBlockField;
-
-    if (newVector[2] === 2) {
-      nextBlockField = [newPosition[0] + 1, newPosition[1]];
-    }
-    if (newVector[1] === 2) {
-      nextBlockField = [newPosition[0] + 1, newPosition[1] + 1];
-    }
-
-    return this.getField(nextBlockField) === 1;
-  }
-
   move(direction) {
-    const movement = this.calculateMove(direction);
-    if (isMovementPossible(movement)) {
-      const { newPosition, newVector } = movement;
+    const nextNode = calculateMove(direction, this);
+    if (isMovementPossible(map, nextNode)) {
+      const { newPosition, newVector } = nextNode;
       this.position = newPosition;
       this.blockVector = newVector;
       return true;
@@ -116,3 +111,115 @@ function bloxSolver(arr) {
   const block = new Block(blockPosition, arr);
   block.position = blockPosition;
 }
+
+/***************** Tests for Codewars Test Framework ************/
+
+describe('Tests', () => {
+  const fixedTests = [
+    [
+      '1110000000',
+      '1B11110000',
+      '1111111110',
+      '0111111111',
+      '0000011X11',
+      '0000001110',
+    ],
+    [
+      '000000111111100',
+      '111100111001100',
+      '111111111001111',
+      '1B11000000011X1',
+      '111100000001111',
+      '000000000000111',
+    ],
+    [
+      '00011111110000',
+      '00011111110000',
+      '11110000011100',
+      '11100000001100',
+      '11100000001100',
+      '1B100111111111',
+      '11100111111111',
+      '000001X1001111',
+      '00000111001111',
+    ],
+    [
+      '11111100000',
+      '1B111100000',
+      '11110111100',
+      '11100111110',
+      '10000001111',
+      '11110000111',
+      '11110000111',
+      '00110111111',
+      '01111111111',
+      '0110011X100',
+      '01100011100',
+    ],
+    [
+      '000001111110000',
+      '000001001110000',
+      '000001001111100',
+      'B11111000001111',
+      '0000111000011X1',
+      '000011100000111',
+      '000000100110000',
+      '000000111110000',
+      '000000111110000',
+      '000000011100000',
+    ],
+  ];
+  /*it("test", () => {
+    const fixedSols = ['RRDRRRD',
+				   'ULDRURRRRUURRRDDDRU',
+				   'ULURRURRRRRRDRDDDDDRULLLLLLD',
+				   'DRURURDDRRDDDLD',
+				   'RRRDRDDRDDRULLLUULUUURRRDDLURRDRDDR'];
+
+    fixedTests.forEach((e,i) => verifySolution(e,bloxSolver(e.slice()),fixedSols[i],));
+  });*/
+  it('creates Block', () => {
+    const block = new Block([1, 1], fixedTests[0]);
+    Test.assertDeepEquals(block.position, [1, 1]);
+  });
+  it('checks possibility of moving block to the right', () => {
+    const block = new Block([1, 1], fixedTests[0]);
+
+    Test.assertEquals(
+      block.isMovementPossible(block.calculateMove([1, 0])),
+      true
+    );
+  });
+  it('moves vertically lying block to the right', () => {
+    const block = new Block([1, 1], fixedTests[0]);
+
+    block.blockVector = [1, 2, 1];
+    const { newPosition, newVector } = block.calculateMove([1, 0]);
+    Test.assertDeepEquals(newPosition, [2, 1, 0]);
+    Test.assertDeepEquals(newVector, [1, 2, 1]);
+  });
+  it('checks movement possible for vertical block', () => {
+    const block = new Block([1, 1], fixedTests[0]);
+    block.blockVector = [1, 2, 1];
+
+    let movement = block.calculateMove([1, 0]);
+    Test.assertEquals(block.isMovementPossible(movement), true);
+
+    block.position = [2, 0, 0];
+    movement = block.calculateMove([1, 0]);
+
+    Test.assertEquals(block.isMovementPossible(movement), false);
+  });
+  it('checks whether two nodes match', () => {
+    const node1 = new Node([1, 0, 0], [1, 2, 1]);
+    const node2 = new Node([1, 0, 0], [1, 2, 1]);
+
+    Test.assertNotEquals(node1, node2);
+    Test.assertEquals(node1.isSameAs(node2), true);
+  });
+  it('gets field', () => {
+    const block = new Block([1, 1], fixedTests[0]);
+    Test.assertEquals(block.getField([1, 1]), 'B');
+    Test.assertEquals(block.getField([1, 2]), 1);
+  });
+});
